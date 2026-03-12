@@ -19,3 +19,4 @@ src/*.o
 
 # all generated outputs
 *.txt
+!requirements.txt
