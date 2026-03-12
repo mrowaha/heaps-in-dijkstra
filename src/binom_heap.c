@@ -161,7 +161,7 @@ static void free_node(BinomNode *n) {
 }
 
 void binom_heap_free(BinomHeap *h) {
-  // recursively frees the heap
+    // recursively frees the heap
     free_node(h->head);
     free(h);
 }

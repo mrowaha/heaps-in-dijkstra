@@ -116,7 +116,7 @@ static double *dijkstra_fib(struct csrdata *csr, int source) {
 
         for (int j = csr->row_ptr[v]; j < csr->row_ptr[v + 1]; j++) {
             int w = csr->col_idx[j];
-            double weight = csr->values ? csr->values[j] : 1.0;
+            double weight = csr->values[j];
             if (dist[v] + weight < dist[w]) {
                 dist[w] = dist[v] + weight;
                 if (!node_ref[w])

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <stdbool.h>
 
 #include "fib_heap.h"
 
@@ -12,22 +13,10 @@ FibHeap *fib_heap_create() {
     return h;
 }
 
-static FibNode *make_node(int vertex, double key) {
-    FibNode *n = (FibNode *)malloc(sizeof(FibNode));
-    n->vertex = vertex;
-    n->key = key;
-    n->degree = 0;
-    n->marked = 0;
-    n->parent = NULL;
-    n->child = NULL;
-    n->left = n;
-    n->right = n;
-    return n;
-}
-
-// Insert node into a circular doubly-linked root list
-static void insert_into_list(FibNode **list, FibNode *n) {
+// insert node into a circular doubly-linked root list
+static void insert_into_list(FibNode **list, FibNode *n)  {
     if (!*list) {
+      // if the list is empty, initialize it with n
         *list = n;
         n->left = n;
         n->right = n;
@@ -39,16 +28,17 @@ static void insert_into_list(FibNode **list, FibNode *n) {
     }
 }
 
-// Remove node from its circular doubly-linked list
-static void remove_from_list(FibNode *n) {
-    n->left->right = n->right;
-    n->right->left = n->left;
+FibNode *fib_heap_insert(FibHeap *h, int vertex, double key) {
+    FibNode *n = (FibNode *)malloc(sizeof(FibNode));
+    n->vertex = vertex;
+    n->key = key;
+    n->degree = 0;
+    n->marked = false;
+    n->parent = NULL;
+    n->child = NULL;
     n->left = n;
     n->right = n;
-}
 
-FibNode *fib_heap_insert(FibHeap *h, int vertex, double key) {
-    FibNode *n = make_node(vertex, key);
     insert_into_list(&h->min, n);
     if (h->min == NULL || n->key < h->min->key)
         h->min = n;
@@ -60,23 +50,32 @@ FibNode *fib_heap_minimum(FibHeap *h) {
     return h->min;
 }
 
+// remove node from its circular doubly-linked list
+static void remove_from_list(FibNode *n) {
+    n->left->right = n->right;
+    n->right->left = n->left;
+    n->left = n;
+    n->right = n;
+}
+
 static void fib_link(FibHeap *h, FibNode *y, FibNode *x) {
-    // Remove y from root list and make it a child of x
+    // remove y from root list and make it a child of x
     remove_from_list(y);
     y->parent = x;
     insert_into_list(&x->child, y);
     x->degree++;
-    y->marked = 0;
+    y->marked = false;
 }
 
 FibNode *fib_heap_extract_min(FibHeap *h) {
     FibNode *z = h->min;
+    // defensive
     if (!z) return NULL;
 
-    // Add all children of z to root list
+    // add all children of z to root list
     if (z->child) {
-        FibNode *child = z->child;
-        FibNode *start = child;
+      // this can be any child, not the leftmost necessarily
+        FibNode *child = z->child, *start = child;
         do {
             FibNode *next = child->right;
             insert_into_list(&h->min, child);
@@ -86,22 +85,25 @@ FibNode *fib_heap_extract_min(FibHeap *h) {
         z->child = NULL;
     }
 
-    // Remove z from root list
+    // remove z from root list
     if (z->right == z) {
         h->min = NULL;
     } else {
         h->min = z->right;
         remove_from_list(z);
-        // Consolidate
+
+        // consolidate (reduce the number of trees)
+        // goal: no two trees in the root list should have the same degree
         int max_degree = (int)(log2(h->size) + 2) + 1;
         FibNode **A = (FibNode **)calloc(max_degree, sizeof(FibNode *));
 
-        // Collect all roots
+        // collect all roots
         int num_roots = 0;
         FibNode *curr = h->min;
         FibNode *start = h->min;
         do { num_roots++; curr = curr->right; } while (curr != start);
 
+        // have a stable snapshot of root list since we will be modifying it when linking
         FibNode **roots = (FibNode **)malloc(num_roots * sizeof(FibNode *));
         curr = h->min;
         for (int i = 0; i < num_roots; i++) {
@@ -114,6 +116,7 @@ FibNode *fib_heap_extract_min(FibHeap *h) {
             int d = w->degree;
             while (d < max_degree && A[d]) {
                 FibNode *y = A[d];
+                // ensure the smaller key node is the parent before linking
                 if (w->key > y->key) { FibNode *tmp = w; w = y; y = tmp; }
                 fib_link(h, y, w);
                 A[d] = NULL;
@@ -122,7 +125,7 @@ FibNode *fib_heap_extract_min(FibHeap *h) {
             if (d < max_degree) A[d] = w;
         }
 
-        // Rebuild root list and find new min
+        // rebuild root list and find new min
         h->min = NULL;
         for (int i = 0; i < max_degree; i++) {
             if (A[i]) {
@@ -151,13 +154,13 @@ static void cut(FibHeap *h, FibNode *x, FibNode *y) {
     y->degree--;
     insert_into_list(&h->min, x);
     x->parent = NULL;
-    x->marked = 0;
+    x->marked = false;
 }
 
 static void cascading_cut(FibHeap *h, FibNode *y) {
     FibNode *z = y->parent;
     if (z) {
-        if (!y->marked) y->marked = 1;
+        if (!y->marked) y->marked = true;
         else {
             cut(h, y, z);
             cascading_cut(h, z);
@@ -166,6 +169,12 @@ static void cascading_cut(FibHeap *h, FibNode *y) {
 }
 
 void fib_heap_decrease_key(FibHeap *h, FibNode *x, double new_key) {
+    // defensive
+    if (new_key > x->key) {
+        fprintf(stderr, "New key is greater than current key\n");
+        return;
+    }
+  
     x->key = new_key;
     FibNode *y = x->parent;
     if (y && x->key < y->key) {
@@ -180,18 +189,19 @@ int fib_heap_is_empty(FibHeap *h) {
     return h->size == 0;
 }
 
-static void free_node_recursive(FibNode *n) {
+static void free_node(FibNode *n) {
     if (!n) return;
     FibNode *curr = n;
     do {
         FibNode *next = curr->right;
-        free_node_recursive(curr->child);
+        free_node(curr->child);
         free(curr);
         curr = next;
     } while (curr != n);
 }
 
 void fib_heap_free(FibHeap *h) {
-    free_node_recursive(h->min);
+    // recursively frees the heap
+    free_node(h->min);
     free(h);
 }
