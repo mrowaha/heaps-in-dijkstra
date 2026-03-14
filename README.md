@@ -4,6 +4,12 @@
 
 ### Build
 
+Setup the project with necessary directories
+
+```bash
+make setup
+```
+
 Compile all source files and link the binary using:
 
 ```bash

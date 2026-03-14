@@ -39,3 +39,7 @@ depend: $(SRCS)
 # Clean rule
 clean:
 	rm -f *~ src/*.o main.o  $(TARGET)
+
+# Setup rule
+setup:
+	mkdir out
