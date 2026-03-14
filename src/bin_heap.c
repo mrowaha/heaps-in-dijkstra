@@ -22,7 +22,7 @@ static void swap(BinHeap *h, int i, int j) {
     h->pos[h->data[j].vertex] = j;
 }
 
-static void sift_up(BinHeap *h, int i) {
+static void bubble_up(BinHeap *h, int i) {
     while (i > 0) {
         int parent = (i - 1) / 2;
         if (h->data[parent].key > h->data[i].key) {
@@ -32,7 +32,7 @@ static void sift_up(BinHeap *h, int i) {
     }
 }
 
-static void sift_down(BinHeap *h, int i) {
+static void bubble_down(BinHeap *h, int i) {
     int n = h->size;
     while (1) {
         int smallest = i;
@@ -53,7 +53,7 @@ void bin_heap_insert(BinHeap *h, int vertex, double key) {
     h->data[i].vertex = vertex;
     h->data[i].key = key;
     h->pos[vertex] = i;
-    sift_up(h, i);
+    bubble_up(h, i);
 }
 
 BinHeapNode bin_heap_extract_min(BinHeap *h) {
@@ -63,7 +63,7 @@ BinHeapNode bin_heap_extract_min(BinHeap *h) {
     if (h->size > 0) {
         h->data[0] = h->data[h->size];
         h->pos[h->data[0].vertex] = 0;
-        sift_down(h, 0);
+        bubble_down(h, 0);
     }
     return min;
 }
@@ -71,7 +71,7 @@ BinHeapNode bin_heap_extract_min(BinHeap *h) {
 void bin_heap_decrease_key(BinHeap *h, int vertex, double new_key) {
     int i = h->pos[vertex];
     h->data[i].key = new_key;
-    sift_up(h, i);
+    bubble_up(h, i);
 }
 
 int bin_heap_is_empty(BinHeap *h) {

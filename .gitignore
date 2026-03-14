@@ -20,3 +20,5 @@ src/*.o
 # all generated outputs
 *.txt
 !requirements.txt
+# large generated graph archive
+generated_graphs.tar.gz

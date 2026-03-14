@@ -45,17 +45,17 @@ def save_directed_graph_to_matrix_market(G, filename, weight_range=(0,1)):
 
 
 
-# Example usage of the functions:
+for num_of_nodes in range(500, 5_000+1, 500):
+  # Sparse Graph with Random Weights
+  G_sparse = generate_random_directed_graph(num_of_nodes, 0.1)
+  save_directed_graph_to_matrix_market(G_sparse, f'mm/generated/sparse_graph{num_of_nodes}.mtx')
+  print(f"saved sparse matrix for {num_of_nodes}")
 
-num_of_nodes = 300
+  G_medium = generate_random_directed_graph(num_of_nodes, 0.6)
+  save_directed_graph_to_matrix_market(G_medium, f'mm/generated/mediumdense_graph{num_of_nodes}.mtx')
+  print(f"saved medium dense matrix for {num_of_nodes}")
 
-# Sparse Graph with Random Weights
-G_sparse = generate_random_directed_graph(num_of_nodes, 0.1)
-save_directed_graph_to_matrix_market(G_sparse, f'sparse_graph{num_of_nodes}.mtx')
-
-G_medium = generate_random_directed_graph(num_of_nodes, 0.6)
-save_directed_graph_to_matrix_market(G_medium, f'mediumdense_graph{num_of_nodes}.mtx')
-
-# Dense Graph with Random Weights
-G_dense = generate_random_directed_graph(num_of_nodes, 0.9)
-save_directed_graph_to_matrix_market(G_dense, f'dense_graph{num_of_nodes}.mtx')
+  # Dense Graph with Random Weights
+  G_dense = generate_random_directed_graph(num_of_nodes, 0.9)
+  save_directed_graph_to_matrix_market(G_dense, f'mm/generated/dense_graph{num_of_nodes}.mtx')
+  print(f"saved dense matrix for {num_of_nodes}")

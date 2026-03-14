@@ -6,8 +6,8 @@ CFLAGS = -O3 -Wall -Wno-unused-variable -Werror -fno-exceptions            \
 -Winit-self -Wl,-O1 -Wl,--no-undefined -g 
 
 # Source and Object Files
-SRCS = src/binom_heap.c src/fib_heap.c src/fib_heap_tests.c src/bin_heap.c src/bin_heap_tests.c src/mm.c src/dijkstra.c main.c
-OBJS = src/binom_heap.o src/fib_heap.o src/fib_heap_tests.o src/bin_heap.o src/bin_heap_tests.o src/mm.o src/dijkstra.o main.o
+SRCS = src/binom_heap.c src/fib_heap.c src/bin_heap.c  src/mm.c src/dijkstra.c main.c
+OBJS = src/binom_heap.o src/fib_heap.o src/bin_heap.o  src/mm.o src/dijkstra.o main.o
 TARGET = dijkstrahw1
 
 
@@ -38,4 +38,4 @@ depend: $(SRCS)
 
 # Clean rule
 clean:
-	rm -f *~ src/*.o $(TARGET)
+	rm -f *~ src/*.o main.o  $(TARGET)

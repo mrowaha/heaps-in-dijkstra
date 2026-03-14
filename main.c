@@ -1,13 +1,14 @@
+// needed for CLOCK_MONOTONIC in non-posix environment
+#define _POSIX_C_SOURCE 199309L 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "mm.h"
 #include "dijkstra.h"
-
-// Declared in test files
-void run_bin_heap_tests();
-void run_fib_heap_tests();
 
 static void usage(const char *prog) {
     fprintf(stderr, "Incorrect usage detected. Please use one of the following:\n");
@@ -43,7 +44,7 @@ static void write_dist_to_file(
 
     // Build output filename: <heapname>_<mtxname>_distances.txt
     char out_name[512];
-    snprintf(out_name, sizeof(out_name), "%s_%s_distances.txt", heap_name, mtx_name);
+    snprintf(out_name, sizeof(out_name), "out/%s_%s_distances.txt", heap_name, mtx_name);
 
     FILE *f = fopen(out_name, "w");
     if (!f) {
@@ -63,13 +64,7 @@ static void write_dist_to_file(
 }
 
 int main(int argc, char *argv[]) {
-    // example usage for testing: ./dijkstra --test
-    if (argc == 2 && strcmp(argv[1], "--test") == 0) {
-        run_bin_heap_tests();
-        run_fib_heap_tests();
-        return EXIT_SUCCESS;
-    }
-
+  
     // if not testing, expect the path to the graph file, the name of the heap
     // the number of the source vertex is optional
     if (argc < 3) {
@@ -113,7 +108,12 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Running Dijkstra from source=%d using %s heap on %s\n", source, heap_name, graph_file);
+    struct timespec t_start, t_end;
+    clock_gettime(CLOCK_MONOTONIC, &t_start);
     double *dist = dijkstra(&csr, source, heap_type);
+    clock_gettime(CLOCK_MONOTONIC, &t_end);
+    double elapsed = (t_end.tv_sec - t_start.tv_sec) + (t_end.tv_nsec - t_start.tv_nsec) / 1e9;
+    printf("Dijkstra elapsed time: %.6f seconds\n", elapsed);
     write_dist_to_file(dist, csr.num_of_rows, heap_name, graph_file);
     
     free(dist);
